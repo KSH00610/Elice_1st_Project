@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+    />
+    <link
+            href="https://font.elice.io/css?family=Elice+DX+Neolli"
+            rel="stylesheet"
+    />
+    <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+
+    <style>
+        html,
+        body {
+          font-family: "Elice DX Neolli", sans-serif;
+        }
+
+        .comment-container {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .comment-item {
+          border: 1px solid #ccc;
+          margin-bottom: 10px;
+          padding: 10px;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+
+        .comment-item:hover {
+          background-color: #f0f0f0;
+        }
+
+        .comment-item h3 {
+          margin-top: 0;
+        }
+
+        .delete-button {
+          color: black;
+          cursor: pointer;
+        }
+    </style>
+    <title>Comments</title>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            var commentItems = document.querySelectorAll(".comment-item");
+            commentItems.forEach(function(item) {
+                item.addEventListener("click", function() {
+                    var boardId = this.getAttribute("data-board-id");
+                    var postId = this.getAttribute("data-post-id");
+                    var commentId = this.getAttribute("data-comment-id");
+                    window.location.href = "/comments/" + boardId + "/" + postId + "/" + commentId;
+                });
+            });
+
+            var deleteButtons = document.querySelectorAll(".delete-button");
+            deleteButtons.forEach(function(button) {
+                button.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    var boardId = this.getAttribute("data-board-id");
+                    var postId = this.getAttribute("data-post-id");
+                    var commentId = this.getAttribute("data-comment-id");
+                    var item = this.parentNode;
+                    if(confirm("정말로 이 포스트를 삭제하시겠습니까?")) {
+                        fetch('/comments/delete/' + boardId + '/' + postId + '/' + commentId, {
+                            method: 'DELETE'
+                        }).then(function(response) {
+                            item.parentNode.removeChild(item);
+                            window.location.href = "/comments/" + boardId + '/' + postId;
+                        }).catch(function(error) {
+                            console.error('삭제 요청 중 오류 발생:', error);
+                        });
+                    }
+                });
+            });
+            var updateButtons = document.querySelectorAll(".update-button");
+            updateButtons.forEach(function(button) {
+                button.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    var boardId = this.getAttribute("data-board-id");
+                    var postId = this.getAttribute("data-post-id");
+                    var commentId = this.getAttribute("data-comment-id");
+                    window.location.href = "/comments/edit/" + boardId+ "/" +postId + "/" + commentId;
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="comment-container">
+    <h2>Comments List</h2>
+    <br/>
+    <div th:each="comment : ${commentList}" class="comment-item" th:attr="data-comment-id=${comment.comment_id}, data-post-id=${comment.post.post_id},data-board-id=${comment.post.board.board_id}" style="cursor: pointer;">
+        <h3 th:text="${comment.detail}"></h3>
+        <p th:text="${comment.createdTime}"></p>
+        <button class="update-button" th:attr="data-comment-id=${comment.comment_id}, data-post-id=${comment.post.post_id},data-board-id=${comment.post.board.board_id}">Update</button>
+        <button class="delete-button" th:attr="data-comment-id=${comment.comment_id}, data-post-id=${comment.post.post_id},data-board-id=${comment.post.board.board_id}">Delete</button>
+    </div>
+    <div class="d-flex justify-content-end mb-3">
+        <a th:href="@{'/comments/create/' + ${board_id} + '/' + ${post_id}}" class="btn btn-primary">ADD Comment</a>
+    </div>
+    <a th:href="@{/posts/{boardId}/{postId}(boardId=${board_id}, postId=${post_id})}">Return to Post</a>
+</div>
+</body>
+</html>
